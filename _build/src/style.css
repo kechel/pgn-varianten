@@ -1,0 +1,201 @@
+:root {
+  --topbar: 52px;
+  --bg: #161512;
+  --bg2: #262421;
+  --bg3: #302e2b;
+  --fg: #d8d6d2;
+  --fg-dim: #9c9a96;
+  --accent: #629924;
+  /* board side: fill the height, but never eat more than ~62% of the width.
+     --reserve only needs the left column's vertical padding now that the move
+     list lives in the right panel (nothing grows below the board). */
+  --reserve: 24px;
+  --side: min(62vw, calc(100vh - var(--topbar) - var(--reserve)));
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: -apple-system, "Segoe UI", "Noto Sans", system-ui, sans-serif;
+  overflow: hidden;
+}
+body.dragging::after {
+  content: "PGN-Datei hier ablegen";
+  position: fixed; inset: 0; z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: 600;
+  background: rgba(20,20,18,.85);
+  border: 4px dashed var(--accent);
+}
+
+/* ---------- top bar ---------- */
+.topbar {
+  height: var(--topbar);
+  display: flex; align-items: center; gap: 12px;
+  padding: 0 14px;
+  background: var(--bg2);
+  border-bottom: 1px solid #000;
+  white-space: nowrap;
+}
+.topbar .title { font-weight: 700; color: #fff; margin-right: 6px; }
+.topbar .title span { color: var(--accent); }
+.btn {
+  background: var(--bg3); color: var(--fg);
+  border: 1px solid #00000040; border-radius: 6px;
+  padding: 7px 12px; cursor: pointer; font-size: 14px;
+}
+.btn:hover { background: #3d3a36; }
+.filelabel {
+  background: var(--accent); color: #fff; font-weight: 600;
+  border-radius: 6px; padding: 7px 12px; cursor: pointer; font-size: 14px;
+}
+.filelabel:hover { filter: brightness(1.08); }
+#fileInput { display: none; }
+select {
+  background: var(--bg3); color: var(--fg);
+  border: 1px solid #00000040; border-radius: 6px;
+  padding: 6px 8px; font-size: 14px; max-width: 360px;
+}
+select:disabled { opacity: .55; }
+.fileName { color: var(--fg-dim); font-size: 13px; }
+.spacer { flex: 1; }
+.chk { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--fg-dim); cursor: pointer; }
+
+/* ---------- main layout ---------- */
+.main {
+  display: flex;
+  height: calc(100vh - var(--topbar));
+}
+.left {
+  /* fixed width so a long breadcrumb can never widen the column and squeeze the right panel */
+  flex: none;
+  width: calc(var(--side) + 20px);
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 0;       /* allow the column to clip rather than overflow the viewport */
+  overflow: hidden;
+  padding: 10px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.board-wrap {
+  /* exactly square — never let flexbox shrink it when the move list grows,
+     otherwise the board turns non-square and the pieces ride up + get clipped */
+  flex: none;
+  width: var(--side);
+  height: var(--side);
+}
+#board { width: 100%; height: 100%; }
+/* move list, now a sticky bar at the top of the right panel above the texts */
+.movebar {
+  position: sticky; top: 0; z-index: 5;
+  background: var(--bg);
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 2px 0 10px; margin-bottom: 10px;
+  border-bottom: 1px solid #00000055;
+  font-size: 14px; color: var(--fg-dim);
+}
+.breadcrumb {
+  display: flex; flex-wrap: wrap; gap: 2px 5px; align-items: center;
+  flex: 1 1 auto; min-width: 0;
+  max-height: 6.5em; overflow-y: auto;
+}
+.crumb { cursor: pointer; padding: 1px 4px; border-radius: 4px; color: var(--fg); }
+.crumb:hover { background: var(--bg3); }
+.crumb-current { color: var(--accent); font-weight: 600; }
+.crumb-sep { color: var(--fg-dim); }
+.posinfo { flex: none; margin-left: auto; white-space: nowrap; }
+
+/* ---------- right panel ---------- */
+.right {
+  flex: 1;
+  min-width: 0;
+  padding: 14px 16px 40px;
+  overflow-y: auto;
+}
+.header-comment {
+  background: var(--bg2);
+  border-left: 4px solid var(--accent);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+.hc-move { font-size: 15px; color: var(--accent); font-weight: 700; margin-bottom: 4px; }
+.hc-text { font-size: 18px; line-height: 1.5; color: #efeeec; margin-top: 6px; }
+.hc-src {
+  display: inline-block; font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .04em;
+  color: var(--fg-dim); background: var(--bg3);
+  border-radius: 4px; padding: 1px 6px; margin-right: 4px; vertical-align: middle;
+}
+.card-src { margin-top: 8px; font-size: 12px; color: var(--fg-dim); }
+
+/* transposition notes: pulled in from another line that reaches the same
+   position — shown after the current-line note, visually subdued + marked */
+.hc-transp { color: #d7b15a; background: #322c1c; }
+.hc-text-transp { color: var(--fg-dim); border-top: 1px dashed #00000050; padding-top: 6px; margin-top: 6px; }
+.card-line-transp { color: var(--fg-dim); display: inline-block; margin-top: 4px; }
+
+.cards-title {
+  display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap;
+  font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--fg-dim); margin: 0 0 10px;
+}
+/* current chapter(s) of the line we're in, shown next to the heading */
+.cards-chapters { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-left: auto; }
+.chap-label { font-size: 11px; color: var(--fg-dim); }
+.chap-chip {
+  text-transform: none; letter-spacing: normal;
+  background: var(--bg3); color: var(--fg);
+  border: 1px solid #00000040; border-radius: 11px;
+  padding: 2px 10px; font-size: 12px; font-weight: 600;
+}
+
+.card {
+  background: var(--bg2);
+  border: 1px solid #00000040;
+  border-left: 6px solid var(--accent);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: background .12s, transform .12s;
+}
+.card:hover { background: var(--bg3); transform: translateX(2px); }
+.card-selected {
+  background: var(--bg3);
+  box-shadow: 0 0 0 2px var(--accent) inset, 0 0 14px -2px var(--accent);
+  transform: translateX(2px);
+}
+.card-main { background: #21251c; }
+.card-main.card-selected { background: var(--bg3); }
+.card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
+.badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 50%;
+  color: #fff; font-weight: 700; font-size: 14px; flex: none;
+}
+.card-move { font-size: 19px; font-weight: 700; color: #fff; }
+.card-tag {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--accent); border: 1px solid var(--accent); border-radius: 10px; padding: 1px 8px;
+}
+.card-chap {
+  font-size: 11px; font-weight: 600;
+  color: var(--fg); background: var(--bg3);
+  border: 1px solid #00000040; border-radius: 10px;
+  padding: 1px 9px;
+}
+.card-cont { font-size: 12px; color: var(--fg-dim); margin-left: auto; }
+.card-body { font-size: 17px; line-height: 1.55; color: #e6e5e2; white-space: pre-wrap; }
+.card-body-empty { color: var(--fg-dim); font-style: italic; font-size: 14px; }
+.card-end { text-align: center; color: var(--fg-dim); cursor: default; border-left-color: #555; }
+.card-end:hover { background: var(--bg2); transform: none; }
+
+.empty-hint {
+  margin: 40px auto; max-width: 460px; text-align: center; color: var(--fg-dim);
+  font-size: 16px; line-height: 1.6;
+}
+.empty-hint kbd {
+  background: var(--bg3); border-radius: 4px; padding: 1px 6px; border: 1px solid #00000060;
+}

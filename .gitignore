@@ -1,0 +1,16 @@
+# dependencies — run `npm install` inside _build/ to restore
+_build/node_modules/
+
+# OS / editor cruft
+.DS_Store
+*.swp
+*.log
+
+# scratch / verification scripts
+_build/check*.mjs
+_build/audit*.mjs
+_build/_*.png
+_build/_*.txt
+
+# NOTE: dist/ is committed ON PURPOSE so the viewer runs without a build step
+#       and GitHub Pages can serve it. Rebuild with: cd _build && node build.mjs

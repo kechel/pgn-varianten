@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PGN-Varianten-Brett</title>
+  <link rel="stylesheet" href="dist/app.css">
+</head>
+<body>
+  <div class="topbar">
+    <div class="title">PGN&nbsp;<span>Varianten</span></div>
+    <label class="filelabel">PGN öffnen…<input id="fileInput" type="file" accept=".pgn,text/plain"></label>
+    <span class="fileName" id="fileName"></span>
+    <select id="gameSelect" disabled title="Partie wählen"></select>
+    <div class="spacer"></div>
+    <label class="chk"><input type="checkbox" id="chkAuthor" checked> Autoren-Pfeile</label>
+    <button class="btn" id="btnFlip" title="Brett drehen (f)">⟲ Drehen</button>
+    <button class="btn" id="btnBack" title="Zurück (←)">← Zurück</button>
+    <button class="btn" id="btnReset" title="Zur Startstellung (Home)">⏮ Start</button>
+  </div>
+
+  <div class="main">
+    <div class="left">
+      <div class="board-wrap"><div id="board"></div></div>
+    </div>
+    <div class="right">
+      <div class="movebar">
+        <div class="breadcrumb" id="breadcrumb"></div>
+        <div class="posinfo" id="positionInfo"></div>
+      </div>
+      <div class="header-comment" id="headerComment" style="display:none"></div>
+      <div class="cards-title">
+        <span>Varianten an dieser Stellung</span>
+        <span class="cards-chapters" id="cardsChapters"></span>
+      </div>
+      <div id="cards">
+        <div class="empty-hint">
+          Lade oben eine <b>.pgn</b>-Datei (oder zieh sie ins Fenster).<br><br>
+          Jede mögliche Fortsetzung wird als <b>nummerierter Pfeil</b> aufs Brett gezeichnet,
+          rechts siehst du alle zugehörigen Kommentare gleichzeitig.<br><br>
+          Mit <kbd>↑</kbd><kbd>↓</kbd> eine Variante auswählen (wird hervorgehoben),
+          <kbd>→</kbd> folgt ihr · <kbd>1</kbd>–<kbd>9</kbd> direkt wählen ·
+          <kbd>←</kbd> zurück · Figuren per Maus ziehbar.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="dist/app.js"></script>
+</body>
+</html>
