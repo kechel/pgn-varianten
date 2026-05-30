@@ -54,7 +54,6 @@ let parsed = null;       // { root, startFen, ... } for the selected game
 let path = [];           // array of nodes from root -> current (root included)
 let orientation = 'white';
 let showAuthor = true;
-let hoverIndex = -1;
 let selectedIndex = 0;   // keyboard-selected variation at the current node
 let cardEls = [];        // card DOM elements, parallel to current().children
 
@@ -90,12 +89,10 @@ function turnColor(fen) {
   return fen.split(' ')[1] === 'w' ? 'white' : 'black';
 }
 
-// the one variation currently highlighted: a live hover wins, else the
-// keyboard selection. Single source of truth for BOTH the arrow and the card,
-// so they can never drift apart.
+// the currently highlighted variation — driven ONLY by keyboard selection.
+// The mouse never changes it (no hover); only a click navigates into a line.
 function activeIndex() {
   const n = current().children.length;
-  if (hoverIndex >= 0 && hoverIndex < n) return hoverIndex;
   return Math.min(selectedIndex, Math.max(0, n - 1));
 }
 
@@ -252,16 +249,14 @@ function renderCards() {
       card.appendChild(body);
     }
 
-    card.addEventListener('click', () => goTo(child));
-    card.addEventListener('mouseenter', () => { hoverIndex = i; applySelection(); });
-    card.addEventListener('mouseleave', () => { hoverIndex = -1; applySelection(); });
+    card.addEventListener('click', () => goTo(child)); // mouse only acts on click
     cardEls.push(card);
     cardsEl.appendChild(card);
   });
   applySelection();
 }
 
-// highlight the active variation (card box + board arrow) from one index
+// highlight the selected variation (card box + board arrow) from one index
 function applySelection() {
   const active = activeIndex();
   cardEls.forEach((c, i) => c.classList.toggle('card-selected', i === active));
@@ -271,7 +266,6 @@ function applySelection() {
 function moveSelection(delta) {
   const n = current().children.length;
   if (n <= 1) return;
-  hoverIndex = -1; // keyboard takes over — never let a stale hover win
   selectedIndex = (selectedIndex + delta + n) % n;
   applySelection();
   const c = cardEls[selectedIndex];
@@ -320,7 +314,6 @@ function renderChapterInfo() {
 }
 
 function renderAll() {
-  hoverIndex = -1;
   selectedIndex = 0;
   refreshBoard();
   renderHeaderComment();
@@ -600,12 +593,6 @@ function init() {
   });
 
   window.addEventListener('resize', () => ground.redrawAll());
-
-  // a mouseleave can be swallowed when the window loses focus, leaving hoverIndex
-  // stale so the arrow sticks on the wrong variation — clear it on blur.
-  window.addEventListener('blur', () => {
-    if (hoverIndex !== -1) { hoverIndex = -1; if (cardEls.length) applySelection(); }
-  });
 }
 
 function defaultBrushes() {
