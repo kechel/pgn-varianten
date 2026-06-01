@@ -49,7 +49,7 @@ const authorBrushOf = { green: 'agreen', red: 'ared', blue: 'ablue', yellow: 'ay
 // when it overlaps the thick numbered variation arrows. The dashes are applied
 // via CSS targeting this exact stroke colour (see ENGINE_ARROW_COLOR in style.css).
 const ENGINE_ARROW_COLOR = '#d500f9';
-const engineBrushes = { engine: { key: 'engine', color: ENGINE_ARROW_COLOR, opacity: 0.85, lineWidth: 5 } };
+const engineBrushes = { engine: { key: 'engine', color: ENGINE_ARROW_COLOR, opacity: 1, lineWidth: 5 } };
 
 // ------------------------------------------------------------------
 // global state
@@ -145,6 +145,26 @@ function buildAutoShapes() {
   return shapes;
 }
 
+// (re)draw all board arrows. chessground's syncShapes only appends new shapes
+// and never reorders existing ones, so e.g. changing the selected variation
+// re-appends those arrows on TOP of an unchanged engine arrow. After every
+// update we therefore lift the engine arrow back to the end of the SVG so it
+// always stays above the variation arrows.
+function setShapes() {
+  ground.setAutoShapes(buildAutoShapes());
+  // chessground renders shapes asynchronously (debounced via requestAnimationFrame),
+  // so raise the engine arrow on the next frame, AFTER the new SVG is in the DOM.
+  requestAnimationFrame(raiseEngineArrow);
+}
+
+function raiseEngineArrow() {
+  const line = boardEl.querySelector('.cg-shapes line[stroke="' + ENGINE_ARROW_COLOR + '"]');
+  if (!line) return;
+  const grp = line.closest('g[cgHash]');
+  const parent = grp && grp.parentElement;
+  if (parent && grp !== parent.lastElementChild) parent.appendChild(grp);
+}
+
 function refreshBoard() {
   const node = current();
   ground.set({
@@ -153,7 +173,7 @@ function refreshBoard() {
     lastMove: node.from ? [node.from, node.to] : undefined,
     movable: { color: turnColor(node.fen), dests: legalDests(node.fen), free: false },
   });
-  ground.setAutoShapes(buildAutoShapes());
+  setShapes();
 }
 
 // ------------------------------------------------------------------
@@ -285,7 +305,7 @@ function renderCards() {
 function applySelection() {
   const active = activeIndex();
   cardEls.forEach((c, i) => c.classList.toggle('card-selected', i === active));
-  ground.setAutoShapes(buildAutoShapes());
+  setShapes();
 }
 
 function moveSelection(delta) {
@@ -437,7 +457,7 @@ function onEngineLine(line) {
     }
     updateEngineBar(scoreText, depthM ? parseInt(depthM[1], 10) : null,
       uciLineToSan(fen, pv, 8), cpForBar);
-    ground.setAutoShapes(buildAutoShapes());
+    setShapes();
   }
 }
 
@@ -501,7 +521,7 @@ async function setEngineOn(on) {
     engineBest = null; pendingFen = null;
     if (evalBarEl) evalBarEl.classList.remove('on');
     if (engineBarEl) engineBarEl.style.display = 'none';
-    ground.setAutoShapes(buildAutoShapes());
+    setShapes();
   }
 }
 
@@ -751,7 +771,7 @@ function init() {
   const authorToggle = el('chkAuthor');
   // blur after toggling so focus returns to the page and the keyboard (↑↓←→,
   // 1–9) keeps working — otherwise the focused checkbox/select swallows keys
-  authorToggle.addEventListener('change', () => { showAuthor = authorToggle.checked; authorToggle.blur(); ground.setAutoShapes(buildAutoShapes()); });
+  authorToggle.addEventListener('change', () => { showAuthor = authorToggle.checked; authorToggle.blur(); setShapes(); });
 
   if (engineToggle) {
     engineToggle.addEventListener('change', () => { engineToggle.blur(); setEngineOn(engineToggle.checked); });
