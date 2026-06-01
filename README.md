@@ -5,25 +5,31 @@ bei der **alle Varianten einer Stellung gleichzeitig** als nummerierte Pfeile au
 gezeichnet werden und die zugehörigen **Kommentare groß nebeneinander** rechts stehen.
 
 ## Benutzen
-**Online:** per GitHub Pages direkt im Browser (sobald in den Repo-Settings aktiviert):
+**Online:** läuft direkt im Browser über GitHub Pages:
 <https://kechel.github.io/pgn-varianten/>
 
 **Lokal:** einfach **`index.html` im Browser öffnen** (Doppelklick). Kein Server nötig.
 
 - Oben **„PGN öffnen…"** klicken oder eine `.pgn` ins Fenster ziehen.
-- Enthält die Datei mehrere Partien, oben im Dropdown wählen.
+- Enthält die Datei mehrere Partien/Kapitel, oben im Dropdown anspringen. Kapitel, die
+  über dieselbe Stellung laufen, werden zu einem gemeinsamen Zugbaum zusammengeführt;
+  bei Zugumstellungen werden die Kommentare aller passenden Kapitel mit angezeigt.
 - Jede mögliche Fortsetzung der aktuellen Stellung wird als **nummerierter Pfeil**
-  gezeichnet (Hauptlinie grün = 1), rechts steht zu jeder Variante der PGN-Kommentar.
-- **Folgen:** Karte / Pfeil anklicken oder Taste `1`–`9`.
-- **Navigation:** `←` zurück · `→` Hauptlinie · `Home` Start · Breadcrumb unten anklicken.
+  gezeichnet (Hauptlinie grün = 1), rechts steht zu jeder Variante der PGN-Kommentar
+  samt Kapitel.
+- **Variante wählen:** `↑`/`↓` (die gewählte wird hervorgehoben), `→` oder `Enter` folgt
+  ihr · Taste `1`–`9` wählt direkt · oder eine **Karte anklicken**.
+- **Navigation:** `←` / `Backspace` zurück · `Home` Start · die **Breadcrumb-Leiste oben**
+  im rechten Bereich anklicken springt an jede Stelle.
 - **Figuren mit der Maus ziehen** geht auch — passt der Zug zu einer Variante, wird ihr
   gefolgt; sonst frei weiterspielen (außerhalb der PGN).
 - **„Drehen"** (`f`) dreht das Brett, **„Autoren-Pfeile"** blendet die in der PGN
   hinterlegten `[%cal]`/`[%csl]`-Markierungen des Autors ein/aus.
 - **„Engine"** schaltet eine lokale **Stockfish**-Bewertung der aktuellen Stellung ein:
-  Eval-Balken neben dem Brett, Bewertung + beste Linie rechts, bester Zug als
-  türkisfarbener Pfeil. Läuft komplett offline im Browser (wird erst beim Einschalten
-  geladen, ~10 MB einmalig).
+  Eval-Balken links am Brett (Weiß füllt von unten), Bewertung + Tiefe + beste Linie
+  rechts, bester Zug als türkisfarbener Pfeil. Bewertet automatisch bei jeder Navigation
+  neu, auch nach eigenen (Off-Book-)Zügen. Läuft komplett offline im Browser (wird erst
+  beim Einschalten geladen, ~10 MB einmalig).
 
 ## Technik
 - Brett: [chessground](https://github.com/lichess-org/chessground) (Lichess' Brett-Komponente)
@@ -36,18 +42,19 @@ gezeichnet werden und die zugehörigen **Kommentare groß nebeneinander** rechts
   Einschalten der Engine nachgeladen.
 - Eigener PGN-Parser (`_build/src/pgn.js`): zerlegt verschachtelte Varianten, Kommentare,
   NAGs ($1…) und `%cal`/`%csl` in einen Zugbaum.
-- Beides ist mit esbuild zu `dist/app.js` + `dist/app.css` gebündelt → keine externen
-  Abhängigkeiten zur Laufzeit, läuft per `file://` ohne Internet.
+- UI/Parser sind mit esbuild zu `dist/app.js` + `dist/app.css` gebündelt; die Engine liegt
+  separat in `dist/engine.js` (Lazy-Load). Keine externen Abhängigkeiten zur Laufzeit,
+  läuft per `file://` ohne Internet.
 
 ## Neu bauen (nur falls Code geändert wird)
 ```sh
 cd _build
-npm install        # einmalig
-node build.mjs     # -> ../dist/app.js + app.css
-# node build.mjs --watch   # automatisch neu bauen
+npm install        # einmalig (zieht u. a. das stockfish-Paket fürs Engine-Bundle)
+node build.mjs     # -> ../dist/app.js, app.css und engine.js
+# node build.mjs --watch   # app.js/css automatisch neu bauen (engine.js nur ohne --watch)
 ```
-`dist/` ist absichtlich mit eingecheckt, damit das Tool ohne Build-Schritt läuft
-und GitHub Pages es ausliefern kann.
+`dist/` ist absichtlich mit eingecheckt (inkl. `engine.js`, ~9 MB), damit das Tool ohne
+Build-Schritt läuft und GitHub Pages es direkt ausliefern kann.
 
 ## Lizenz
 **GPL-3.0-or-later** © 2026 Jan Kechel — siehe [`LICENSE`](LICENSE).
