@@ -418,7 +418,7 @@ function onEngineLine(line) {
     const pvM = line.match(/ pv (.+)$/);
     if (!pvM) return;
     const pv = pvM[1].trim().split(/\s+/);
-    engineBest = { from: pv[0].slice(0, 2), to: pv[0].slice(2, 4), fen };
+    engineBest = { from: pv[0].slice(0, 2), to: pv[0].slice(2, 4), promotion: pv[0].slice(4) || null, fen };
     const whiteToMove = turnColor(fen) === 'white';
     let scoreText, cpForBar;
     if (mateM) {
@@ -531,9 +531,17 @@ function onBoardMove(orig, dest) {
   const child = node.children.find((c) => c.from === orig && c.to === dest);
   if (child) { goTo(child); return; }
   // otherwise allow free (off-book) exploration if the move is legal
+  playOffBook(orig, dest, 'q');
+}
+
+// play a legal move that isn't (or no longer is) in the PGN — creates an ad-hoc
+// node and navigates into it. Used for board drags and for following the engine
+// recommendation at the end of a line.
+function playOffBook(orig, dest, promotion) {
+  const node = current();
   const chess = new Chess(node.fen);
   let mv;
-  try { mv = chess.move({ from: orig, to: dest, promotion: 'q' }); }
+  try { mv = chess.move({ from: orig, to: dest, promotion: promotion || 'q' }); }
   catch (e) { renderAll(); return; }
   if (!mv) { renderAll(); return; }
   const adhoc = {
@@ -761,9 +769,12 @@ function init() {
     else if (e.key === 'ArrowRight' || e.key === 'Enter') {
       e.preventDefault();
       const n = current();
-      // follow exactly the variation that is highlighted (hover wins over the
-      // keyboard selection, just like the arrow + card glow) — never desync
+      // follow the highlighted variation; if there are no variations left but the
+      // engine has a recommendation for this position, play that move instead.
       if (n.children.length) goTo(n.children[activeIndex()]);
+      else if (engineOn && engineBest && engineBest.fen === n.fen) {
+        playOffBook(engineBest.from, engineBest.to, engineBest.promotion || 'q');
+      }
     } else if (e.key === 'ArrowDown') { e.preventDefault(); moveSelection(1); }
     else if (e.key === 'ArrowUp') { e.preventDefault(); moveSelection(-1); }
     else if (/^[1-9]$/.test(e.key)) {

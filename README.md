@@ -34,8 +34,10 @@ gezeichnet werden und die zugehörigen **Kommentare groß nebeneinander** rechts
 - **„Engine"** schaltet eine lokale **Stockfish**-Bewertung der aktuellen Stellung ein:
   Eval-Balken links am Brett (Weiß füllt von unten), Bewertung + Tiefe + beste Linie
   rechts, bester Zug als türkisfarbener Pfeil. Bewertet automatisch bei jeder Navigation
-  neu, auch nach eigenen (Off-Book-)Zügen. Läuft komplett offline im Browser (**default an**;
-  lädt beim Start einmalig ~10 MB, abschaltbar).
+  neu, auch nach eigenen (Off-Book-)Zügen. Am **Ende einer Linie** (keine Varianten mehr)
+  folgt `→` automatisch der Engine-Empfehlung — so läuft man die Engine-Hauptvariante
+  Zug für Zug ab. Läuft komplett offline im Browser (**default an**; lädt beim Start
+  einmalig ~10 MB, abschaltbar).
 
 ## Technik
 - Brett: [chessground](https://github.com/lichess-org/chessground) (Lichess' Brett-Komponente)
