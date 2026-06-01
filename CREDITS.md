@@ -58,6 +58,12 @@ Colin M. L. Burnett und werden von Lichess unter freien Lizenzen verbreitet
 über chessground eingebunden. Quelle:
 <https://github.com/lichess-org/lila/tree/master/public/piece/cburnett>
 
+## Turm-Figuren („Qualle")
+
+Die **Türme** werden mit einem Quallen-Icon dargestellt (aus dem „qualle"-Projekt,
+© 2024 Jan Kechel), als PNG `background-image` in `dist/app.css` eingebettet. Es
+überschreibt nur den Turm der cburnett-Figuren; alle übrigen Figuren bleiben cburnett.
+
 ## Stockfish (lokale Engine)
 
 Die optionale **Stellungsbewertung** läuft komplett lokal im Browser über

@@ -69,7 +69,7 @@ const opts = {
   bundle: true,
   format: 'iife',
   outfile: '../dist/app.js',
-  loader: { '.css': 'css', '.pgn': 'text' },
+  loader: { '.css': 'css', '.pgn': 'text', '.png': 'dataurl' },
   banner: { js: banner, css: banner },
   legalComments: 'eof',
   minify: true,
