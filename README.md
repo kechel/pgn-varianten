@@ -4,6 +4,10 @@ Eine statische, komplett offline laufende HTML-Seite zum Durchspielen von Schach
 bei der **alle Varianten einer Stellung gleichzeitig** als nummerierte Pfeile aufs Brett
 gezeichnet werden und die zugehörigen **Kommentare groß nebeneinander** rechts stehen.
 
+![Screenshot: Italienische Partie mit nummerierten Varianten-Pfeilen, Kommentar-Karten, Stockfish-Bewertung und Quallen-Türmen](screenshot.jpg)
+
+*(Beispiel mit der mitgelieferten [`examples/italienische-partie.pgn`](examples/italienische-partie.pgn).)*
+
 ## Benutzen
 **Online:** läuft direkt im Browser über GitHub Pages:
 <https://kechel.github.io/pgn-varianten/>
