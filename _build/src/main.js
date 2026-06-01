@@ -66,6 +66,8 @@ let engineOn = false;     // toggle state
 let engineReady = false;  // UCI handshake finished
 let enginePromise = null; // in-flight load, so we never inject the script twice
 let engineBest = null;    // { from, to, fen } — best move arrow for the current position
+let searchingFen = null;  // fen the engine is currently searching (null = idle)
+let pendingFen = null;     // latest fen we still want searched once the engine is free
 const ENGINE_DEPTH = 18;
 
 // ------------------------------------------------------------------
@@ -394,8 +396,16 @@ function uciLineToSan(fen, uciMoves, max) {
 }
 
 function onEngineLine(line) {
-  if (!engineOn || !path.length) return;
-  const fen = current().fen;
+  // search finished (or was stopped) — the engine is now free; start the next
+  // position if navigation queued one. NEVER send position/go mid-search: the
+  // single-threaded wasm traps ("unreachable") on a position change while busy.
+  // Handle this even when the engine is toggled off, so the busy state always
+  // clears and a later toggle-on can't start a search while one is still live.
+  if (line.lastIndexOf('bestmove', 0) === 0) { searchingFen = null; pumpEngine(); return; }
+  if (!engineOn || searchingFen === null || !path.length) return;
+  const fen = searchingFen;
+  // only paint the board if this result is still for the position on the board
+  if (fen !== current().fen) return;
   // a depth/score/pv info line
   if (line.lastIndexOf('info', 0) === 0 && line.indexOf(' pv ') !== -1) {
     const depthM = line.match(/\bdepth (\d+)/);
@@ -445,12 +455,25 @@ function updateEngineBar(scoreText, depth, pvSan, cpForBar) {
     '<span class="eval-pv">' + escapeHtml(pvSan.join(' ')) + (pvSan.length >= 8 ? ' …' : '') + '</span>';
 }
 
+// Serialize engine work: at most one search runs at a time. analyze() records
+// the wanted position; pumpEngine() either starts it (engine idle) or stops the
+// running search and lets the bestmove handler start the latest wanted one.
 function analyze() {
   if (!engineOn || !engineReady || !engine || !path.length) return;
-  engineBest = null; // drop the previous position's arrow until new info arrives
-  engine.send('stop');
-  engine.send('position fen ' + current().fen);
-  engine.send('go depth ' + ENGINE_DEPTH);
+  pendingFen = current().fen;
+  pumpEngine();
+}
+
+function pumpEngine() {
+  if (!engineOn || !engineReady || !engine) return;
+  if (searchingFen !== null) { engine.send('stop'); return; } // bestmove will re-pump
+  if (pendingFen !== null) {
+    searchingFen = pendingFen;
+    pendingFen = null;
+    engineBest = null; // drop the previous position's arrow until new info arrives
+    engine.send('position fen ' + searchingFen);
+    engine.send('go depth ' + ENGINE_DEPTH);
+  }
 }
 
 async function setEngineOn(on) {
@@ -470,8 +493,8 @@ async function setEngineOn(on) {
     if (!engineOn) return; // toggled back off while loading
     analyze();
   } else {
-    if (engine) engine.send('stop');
-    engineBest = null;
+    if (engine) engine.send('stop'); // searchingFen is cleared by the bestmove that follows
+    engineBest = null; pendingFen = null;
     if (evalBarEl) evalBarEl.style.display = 'none';
     if (engineBarEl) engineBarEl.style.display = 'none';
     ground.setAutoShapes(buildAutoShapes());
@@ -706,7 +729,7 @@ function init() {
     reader.readAsText(f, 'UTF-8');
   });
 
-  gameSelect.addEventListener('change', (e) => jumpToChapter(parseInt(e.target.value, 10)));
+  gameSelect.addEventListener('change', (e) => { jumpToChapter(parseInt(e.target.value, 10)); gameSelect.blur(); });
   el('btnBack').addEventListener('click', goBack);
   el('btnReset').addEventListener('click', goReset);
   el('btnFlip').addEventListener('click', () => {
@@ -714,9 +737,11 @@ function init() {
     ground.set({ orientation });
   });
   const authorToggle = el('chkAuthor');
-  authorToggle.addEventListener('change', () => { showAuthor = authorToggle.checked; ground.setAutoShapes(buildAutoShapes()); });
+  // blur after toggling so focus returns to the page and the keyboard (↑↓←→,
+  // 1–9) keeps working — otherwise the focused checkbox/select swallows keys
+  authorToggle.addEventListener('change', () => { showAuthor = authorToggle.checked; authorToggle.blur(); ground.setAutoShapes(buildAutoShapes()); });
 
-  if (engineToggle) engineToggle.addEventListener('change', () => setEngineOn(engineToggle.checked));
+  if (engineToggle) engineToggle.addEventListener('change', () => { engineToggle.blur(); setEngineOn(engineToggle.checked); });
 
   document.addEventListener('keydown', (e) => {
     if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return;
