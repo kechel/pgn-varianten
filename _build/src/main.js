@@ -44,9 +44,12 @@ const authorBrushes = {
   ayellow: { key: 'ayellow', color: '#e0a800', opacity: 0.5, lineWidth: 8 },
 };
 const authorBrushOf = { green: 'agreen', red: 'ared', blue: 'ablue', yellow: 'ayellow' };
-// the engine's best move — one thick translucent arrow, visually distinct from
-// the numbered (opaque) variation arrows
-const engineBrushes = { engine: { key: 'engine', color: '#00bcd4', opacity: 0.55, lineWidth: 14 } };
+// the engine's best move — a THIN, DASHED arrow in a colour reserved only for
+// the engine (magenta, used by no variation/author brush). Stays readable even
+// when it overlaps the thick numbered variation arrows. The dashes are applied
+// via CSS targeting this exact stroke colour (see ENGINE_ARROW_COLOR in style.css).
+const ENGINE_ARROW_COLOR = '#d500f9';
+const engineBrushes = { engine: { key: 'engine', color: ENGINE_ARROW_COLOR, opacity: 0.85, lineWidth: 5 } };
 
 // ------------------------------------------------------------------
 // global state

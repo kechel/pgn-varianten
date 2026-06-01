@@ -93,6 +93,14 @@ select:disabled { opacity: .55; }
 body.qualle .cg-wrap piece.rook.white { background-image: url(./qualle-white.png); }
 body.qualle .cg-wrap piece.rook.black { background-image: url(./qualle-black.png); }
 
+/* Engine-Pfeil: gestrichelt machen. chessground zeichnet Pfeile als <line> mit
+   stroke=<brush.color>; wir treffen über die reservierte Farbe gezielt nur den
+   Engine-Pfeil. Maße in Brett-Einheiten (Board = 8×8, stroke-width ≈ 5/64). */
+.cg-wrap .cg-shapes line[stroke="#d500f9"] {
+  stroke-dasharray: 0.18 0.13;
+  stroke-linecap: butt;
+}
+
 .board-row { display: flex; align-items: stretch; gap: 8px; }
 /* lichess-style vertical eval bar — White fills from the bottom.
    The bar ALWAYS reserves its width (only its visibility toggles), so the board
@@ -151,7 +159,7 @@ body.qualle .cg-wrap piece.rook.black { background-image: url(./qualle-black.png
 .engine-bar {
   flex: none;
   display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
-  background: var(--bg2); border-left: 4px solid #00bcd4; border-radius: 8px;
+  background: var(--bg2); border-left: 4px solid #d500f9; border-radius: 8px;
   padding: 8px 14px; margin-bottom: 12px;
 }
 .eval-score { font-size: 20px; font-weight: 700; }
@@ -249,6 +257,11 @@ body.qualle .cg-wrap piece.rook.black { background-image: url(./qualle-black.png
 .empty-hint kbd {
   background: var(--bg3); border-radius: 4px; padding: 1px 6px; border: 1px solid #00000060;
 }
+.legend-engine {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin-top: 18px; font-size: 14px; color: var(--fg-dim);
+}
+.legend-engine svg { flex: none; }
 .license-note {
   margin-top: 22px; padding-top: 14px; border-top: 1px solid #ffffff14;
   font-size: 13px; color: var(--fg-dim);
