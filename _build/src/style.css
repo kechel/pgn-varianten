@@ -69,15 +69,26 @@ select:disabled { opacity: .55; }
   height: calc(100vh - var(--topbar));
 }
 .left {
-  /* fixed width so a long breadcrumb can never widen the column and squeeze the right panel */
+  /* fixed width so a long breadcrumb can never widen the column and squeeze the right panel.
+     +46px leaves room for the optional eval bar (18px) + gap to the left of the board */
   flex: none;
-  width: calc(var(--side) + 20px);
+  width: calc(var(--side) + 46px);
   box-sizing: border-box;
   min-width: 0;
   min-height: 0;       /* allow the column to clip rather than overflow the viewport */
   overflow: hidden;
   padding: 10px;
   display: flex; flex-direction: column; gap: 8px;
+}
+.board-row { display: flex; align-items: stretch; gap: 8px; }
+/* lichess-style vertical eval bar — White fills from the bottom */
+.eval-bar {
+  flex: none; width: 18px; height: var(--side);
+  background: #3f3d3a; border-radius: 4px; overflow: hidden; position: relative;
+}
+.eval-fill {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 50%;
+  background: #f0f0ee; transition: height .2s ease;
 }
 .board-wrap {
   /* exactly square — never let flexbox shrink it when the move list grows,
@@ -118,6 +129,19 @@ select:disabled { opacity: .55; }
   display: flex;
   flex-direction: column;
 }
+/* engine readout — score + depth + best line, fixed above the description */
+.engine-bar {
+  flex: none;
+  display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  background: var(--bg2); border-left: 4px solid #00bcd4; border-radius: 8px;
+  padding: 8px 14px; margin-bottom: 12px;
+}
+.eval-score { font-size: 20px; font-weight: 700; }
+.eval-pos { color: #cfe8c0; }
+.eval-neg { color: #e6b3b3; }
+.eval-meta { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--fg-dim); }
+.eval-pv { font-size: 14px; color: var(--fg); font-variant-numeric: tabular-nums; }
+
 .header-comment {
   flex: none;
   background: var(--bg2);

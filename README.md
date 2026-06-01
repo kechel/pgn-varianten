@@ -20,11 +20,20 @@ gezeichnet werden und die zugehörigen **Kommentare groß nebeneinander** rechts
   gefolgt; sonst frei weiterspielen (außerhalb der PGN).
 - **„Drehen"** (`f`) dreht das Brett, **„Autoren-Pfeile"** blendet die in der PGN
   hinterlegten `[%cal]`/`[%csl]`-Markierungen des Autors ein/aus.
+- **„Engine"** schaltet eine lokale **Stockfish**-Bewertung der aktuellen Stellung ein:
+  Eval-Balken neben dem Brett, Bewertung + beste Linie rechts, bester Zug als
+  türkisfarbener Pfeil. Läuft komplett offline im Browser (wird erst beim Einschalten
+  geladen, ~10 MB einmalig).
 
 ## Technik
 - Brett: [chessground](https://github.com/lichess-org/chessground) (Lichess' Brett-Komponente)
   — native Pfeile/Markierungen + Drag, Figuren (cburnett) als data-URI eingebettet.
 - Zug-Logik / SAN→Felder / Legalität: [chess.js](https://github.com/jhlywa/chess.js).
+- Lokale Engine: [Stockfish 18](https://github.com/nmrugg/stockfish.js) (Lite, single-threaded,
+  WASM), als base64 in `dist/engine.js` eingebettet und in einem Blob-Worker mit direkt
+  übergebenem `wasmBinary` ausgeführt — so läuft die Analyse ohne Server, ohne
+  `SharedArrayBuffer`/COOP-COEP und auch per `file://`. Wird per Lazy-Load erst beim
+  Einschalten der Engine nachgeladen.
 - Eigener PGN-Parser (`_build/src/pgn.js`): zerlegt verschachtelte Varianten, Kommentare,
   NAGs ($1…) und `%cal`/`%csl` in einen Zugbaum.
 - Beides ist mit esbuild zu `dist/app.js` + `dist/app.css` gebündelt → keine externen
@@ -44,7 +53,7 @@ und GitHub Pages es ausliefern kann.
 **GPL-3.0-or-later** © 2026 Jan Kechel — siehe [`LICENSE`](LICENSE).
 
 Diese Lizenz ist zwingend, weil das ausgelieferte Bundle **chessground** (GPL-3.0)
-enthält. Mitgelieferte Drittkomponenten und ihre Lizenzen sind in
-[`CREDITS.md`](CREDITS.md) aufgeführt (chessground GPL-3.0, cburnett-Figuren GPL,
-chess.js BSD-2-Clause; Build-Werkzeuge esbuild/MIT und puppeteer/Apache-2.0 sind
-nicht im Bundle).
+und **Stockfish** (GPL-3.0) enthält. Mitgelieferte Drittkomponenten und ihre Lizenzen
+sind in [`CREDITS.md`](CREDITS.md) aufgeführt (chessground GPL-3.0, cburnett-Figuren GPL,
+chess.js BSD-2-Clause, Stockfish.js GPL-3.0; Build-Werkzeuge esbuild/MIT und
+puppeteer/Apache-2.0 sind nicht im Bundle).

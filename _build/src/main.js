@@ -44,6 +44,9 @@ const authorBrushes = {
   ayellow: { key: 'ayellow', color: '#e0a800', opacity: 0.5, lineWidth: 8 },
 };
 const authorBrushOf = { green: 'agreen', red: 'ared', blue: 'ablue', yellow: 'ayellow' };
+// the engine's best move — one thick translucent arrow, visually distinct from
+// the numbered (opaque) variation arrows
+const engineBrushes = { engine: { key: 'engine', color: '#00bcd4', opacity: 0.55, lineWidth: 14 } };
 
 // ------------------------------------------------------------------
 // global state
@@ -57,6 +60,14 @@ let showAuthor = true;
 let selectedIndex = 0;   // keyboard-selected variation at the current node
 let cardEls = [];        // card DOM elements, parallel to current().children
 
+// --- local Stockfish (lazy-loaded from dist/engine.js only when turned on) ---
+let engine = null;        // { send, onLine, quit } once the engine bundle is loaded
+let engineOn = false;     // toggle state
+let engineReady = false;  // UCI handshake finished
+let enginePromise = null; // in-flight load, so we never inject the script twice
+let engineBest = null;    // { from, to, fen } — best move arrow for the current position
+const ENGINE_DEPTH = 18;
+
 // ------------------------------------------------------------------
 // DOM
 // ------------------------------------------------------------------
@@ -69,6 +80,10 @@ const gameSelect = el('gameSelect');
 const fileInput = el('fileInput');
 const positionInfoEl = el('positionInfo');
 const cardsChaptersEl = el('cardsChapters');
+const engineToggle = el('chkEngine');
+const engineBarEl = el('engineBar');
+const evalBarEl = el('evalBar');
+const evalFillEl = el('evalFill');
 
 function current() { return path[path.length - 1]; }
 
@@ -116,6 +131,10 @@ function buildAutoShapes() {
   if (showAuthor) {
     for (const c of (node.csl || [])) shapes.push({ orig: c.orig, brush: authorBrushOf[c.brush] || 'agreen' });
     for (const a of (node.cal || [])) shapes.push({ orig: a.orig, dest: a.dest, brush: authorBrushOf[a.brush] || 'agreen' });
+  }
+  // the engine's best move for exactly this position
+  if (engineOn && engineBest && engineBest.fen === node.fen) {
+    shapes.push({ orig: engineBest.from, dest: engineBest.to, brush: 'engine' });
   }
   return shapes;
 }
@@ -320,6 +339,143 @@ function renderAll() {
   renderCards();
   renderBreadcrumb();
   renderChapterInfo();
+  if (engineOn && engineReady) analyze();
+}
+
+// ------------------------------------------------------------------
+// local Stockfish — load on demand, then evaluate the current position
+// ------------------------------------------------------------------
+// inject dist/engine.js once (a plain <script> works over file://, unlike
+// fetch/XHR/Worker-from-file). It exposes window.PgnEngine.
+function loadEngineScript() {
+  if (window.PgnEngine) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    const base = (document.querySelector('script[src$="app.js"]') || {}).src || '';
+    s.src = base ? base.replace(/app\.js(\?.*)?$/, 'engine.js') : 'dist/engine.js';
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error('engine.js konnte nicht geladen werden'));
+    document.head.appendChild(s);
+  });
+}
+
+function ensureEngine() {
+  if (engineReady) return Promise.resolve();
+  if (enginePromise) return enginePromise;
+  enginePromise = loadEngineScript().then(() => new Promise((resolve) => {
+    engine = window.PgnEngine.load();
+    engine.onLine((line) => {
+      if (!engineReady && (line === 'uciok' || /^id /.test(line))) { /* handshake progressing */ }
+      if (line === 'readyok') { engineReady = true; resolve(); }
+      onEngineLine(line);
+    });
+    engine.send('uci');
+    engine.send('setoption name MultiPV value 1');
+    engine.send('ucinewgame');
+    engine.send('isready');
+  }));
+  return enginePromise;
+}
+
+// convert a UCI principal variation (e2e4 e7e5 …) into SAN, from the given FEN
+function uciLineToSan(fen, uciMoves, max) {
+  const chess = new Chess(fen);
+  const out = [];
+  for (const u of uciMoves) {
+    if (out.length >= max) break;
+    const mv = { from: u.slice(0, 2), to: u.slice(2, 4) };
+    if (u.length > 4) mv.promotion = u[4];
+    let r;
+    try { r = chess.move(mv); } catch (e) { break; }
+    if (!r) break;
+    out.push(r.san);
+  }
+  return out;
+}
+
+function onEngineLine(line) {
+  if (!engineOn || !path.length) return;
+  const fen = current().fen;
+  // a depth/score/pv info line
+  if (line.lastIndexOf('info', 0) === 0 && line.indexOf(' pv ') !== -1) {
+    const depthM = line.match(/\bdepth (\d+)/);
+    const cpM = line.match(/\bscore cp (-?\d+)/);
+    const mateM = line.match(/\bscore mate (-?\d+)/);
+    const pvM = line.match(/ pv (.+)$/);
+    if (!pvM) return;
+    const pv = pvM[1].trim().split(/\s+/);
+    engineBest = { from: pv[0].slice(0, 2), to: pv[0].slice(2, 4), fen };
+    const whiteToMove = turnColor(fen) === 'white';
+    let scoreText, cpForBar;
+    if (mateM) {
+      const m = parseInt(mateM[1], 10);
+      const signed = whiteToMove ? m : -m;
+      scoreText = '#' + (signed < 0 ? '-' : '') + Math.abs(m);
+      cpForBar = signed >= 0 ? 100000 : -100000;
+    } else if (cpM) {
+      let cp = parseInt(cpM[1], 10);
+      if (!whiteToMove) cp = -cp; // make it White-relative
+      cpForBar = cp;
+      const p = (cp / 100).toFixed(2);
+      scoreText = (cp > 0 ? '+' : '') + p;
+    } else {
+      return;
+    }
+    updateEngineBar(scoreText, depthM ? parseInt(depthM[1], 10) : null,
+      uciLineToSan(fen, pv, 8), cpForBar);
+    ground.setAutoShapes(buildAutoShapes());
+  }
+}
+
+// eval bar fill: logistic-ish squash of centipawns into 0..100 % (White at bottom)
+function evalToPercent(cp) {
+  if (cp >= 100000) return 100;
+  if (cp <= -100000) return 0;
+  const x = Math.max(-1500, Math.min(1500, cp)) / 1000;
+  return 50 + 50 * (2 / (1 + Math.exp(-1.4 * x)) - 1);
+}
+
+function updateEngineBar(scoreText, depth, pvSan, cpForBar) {
+  if (evalFillEl) evalFillEl.style.height = evalToPercent(cpForBar).toFixed(1) + '%';
+  if (!engineBarEl) return;
+  const cls = scoreText.indexOf('-') === 0 || (scoreText[0] !== '+' && scoreText[0] !== '#') ? 'eval-neg' : 'eval-pos';
+  engineBarEl.innerHTML =
+    '<span class="eval-score ' + cls + '">' + escapeHtml(scoreText) + '</span>' +
+    (depth != null ? '<span class="eval-meta">Tiefe ' + depth + '</span>' : '') +
+    '<span class="eval-pv">' + escapeHtml(pvSan.join(' ')) + (pvSan.length >= 8 ? ' …' : '') + '</span>';
+}
+
+function analyze() {
+  if (!engineOn || !engineReady || !engine || !path.length) return;
+  engineBest = null; // drop the previous position's arrow until new info arrives
+  engine.send('stop');
+  engine.send('position fen ' + current().fen);
+  engine.send('go depth ' + ENGINE_DEPTH);
+}
+
+async function setEngineOn(on) {
+  engineOn = on;
+  if (on) {
+    if (evalBarEl) evalBarEl.style.display = '';
+    if (engineBarEl) { engineBarEl.style.display = ''; engineBarEl.innerHTML = '<span class="eval-meta">Engine wird geladen…</span>'; }
+    try {
+      await ensureEngine();
+    } catch (e) {
+      console.warn(e);
+      if (engineBarEl) engineBarEl.innerHTML = '<span class="eval-neg">Engine konnte nicht geladen werden.</span>';
+      engineOn = false; engineToggle.checked = false;
+      if (evalBarEl) evalBarEl.style.display = 'none';
+      return;
+    }
+    if (!engineOn) return; // toggled back off while loading
+    analyze();
+  } else {
+    if (engine) engine.send('stop');
+    engineBest = null;
+    if (evalBarEl) evalBarEl.style.display = 'none';
+    if (engineBarEl) engineBarEl.style.display = 'none';
+    ground.setAutoShapes(buildAutoShapes());
+  }
 }
 
 // ------------------------------------------------------------------
@@ -536,7 +692,7 @@ function init() {
     drawable: {
       enabled: true,
       visible: true,
-      brushes: { ...defaultBrushes(), ...variationBrushes, ...authorBrushes },
+      brushes: { ...defaultBrushes(), ...variationBrushes, ...authorBrushes, ...engineBrushes },
     },
     highlight: { lastMove: true, check: true },
     animation: { enabled: true, duration: 180 },
@@ -559,6 +715,8 @@ function init() {
   });
   const authorToggle = el('chkAuthor');
   authorToggle.addEventListener('change', () => { showAuthor = authorToggle.checked; ground.setAutoShapes(buildAutoShapes()); });
+
+  if (engineToggle) engineToggle.addEventListener('change', () => setEngineOn(engineToggle.checked));
 
   document.addEventListener('keydown', (e) => {
     if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return;

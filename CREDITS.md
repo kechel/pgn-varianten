@@ -8,9 +8,10 @@ Im ausgelieferten Bundle (`dist/`) enthalten:
 
 | Komponente | Copyright | Lizenz |
 |---|---|---|
-| [chessground](https://github.com/lichess-org/chessground) | © lichess.org (Thibault Duplessis u. a.) | **GPL-3.0-or-later** |
+| [chessground](https://github.com/lichess-org/chessground) (in `dist/app.js`) | © lichess.org (Thibault Duplessis u. a.) | **GPL-3.0-or-later** |
 | cburnett-Schachfiguren (in `chessground.cburnett.css`) | © Colin M. L. Burnett | GPL (siehe unten) |
-| [chess.js](https://github.com/jhlywa/chess.js) | © 2025 Jeff Hlywa | BSD-2-Clause |
+| [chess.js](https://github.com/jhlywa/chess.js) (in `dist/app.js`) | © 2025 Jeff Hlywa | BSD-2-Clause |
+| [Stockfish.js 18](https://github.com/nmrugg/stockfish.js) — lite, single-threaded WASM, eingebettet in `dist/engine.js` | © 2026 Chess.com, LLC; basiert auf [Stockfish](https://github.com/official-stockfish/Stockfish) © die Stockfish-Autoren; NNUE-Netz © Linmiao Xu (linrock) | **GPL-3.0** |
 
 Nur zur Entwicklung/zum Bauen verwendet (**nicht** im Bundle):
 
@@ -56,6 +57,16 @@ Colin M. L. Burnett und werden von Lichess unter freien Lizenzen verbreitet
 (GPL / GFDL / BSD; ursprünglich für Wikipedia erstellt). Sie werden hier unverändert
 über chessground eingebunden. Quelle:
 <https://github.com/lichess-org/lila/tree/master/public/piece/cburnett>
+
+## Stockfish (lokale Engine)
+
+Die optionale **Stellungsbewertung** läuft komplett lokal im Browser über
+**Stockfish 18** (Lite-NNUE, Single-Threaded), kompiliert nach WebAssembly via
+[nmrugg/stockfish.js](https://github.com/nmrugg/stockfish.js). Stockfish steht
+unter **GPL-3.0** — vollständig kompatibel mit der GPL-3.0-or-later dieses
+Projekts. Das WASM ist als base64 in `dist/engine.js` eingebettet und wird erst
+geladen, wenn man die Engine im UI einschaltet (keine Netzwerk-Zugriffe, kein
+`SharedArrayBuffer`/COOP-COEP nötig — läuft auch per `file://`).
 
 ## chessground & GPL
 
