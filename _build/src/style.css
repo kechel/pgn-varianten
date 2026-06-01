@@ -81,10 +81,12 @@ select:disabled { opacity: .55; }
   display: flex; flex-direction: column; gap: 8px;
 }
 /* Türme als „Qualle"-Icon — die PNGs werden als data-URI ins Bundle eingebettet.
-   Diese Regeln stehen NACH chessground.cburnett.css und überschreiben dessen
-   Standard-Turm (gleiche Spezifität, spätere Quelle gewinnt im Cascade). */
-.cg-wrap piece.rook.white { background-image: url(./qualle-white.png); }
-.cg-wrap piece.rook.black { background-image: url(./qualle-black.png); }
+   Nur aktiv, wenn <body class="qualle"> gesetzt ist (Checkbox „Qualle", default an).
+   Die Regeln stehen nach chessground.cburnett.css und haben mit dem body-Prefix
+   höhere Spezifität -> überschreiben dessen Standard-Turm; ohne die Klasse greift
+   wieder cburnett. */
+body.qualle .cg-wrap piece.rook.white { background-image: url(./qualle-white.png); }
+body.qualle .cg-wrap piece.rook.black { background-image: url(./qualle-black.png); }
 
 .board-row { display: flex; align-items: stretch; gap: 8px; }
 /* lichess-style vertical eval bar — White fills from the bottom.

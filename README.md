@@ -25,6 +25,8 @@ gezeichnet werden und die zugehörigen **Kommentare groß nebeneinander** rechts
   gefolgt; sonst frei weiterspielen (außerhalb der PGN).
 - **„Drehen"** (`f`) dreht das Brett, **„Autoren-Pfeile"** blendet die in der PGN
   hinterlegten `[%cal]`/`[%csl]`-Markierungen des Autors ein/aus.
+- **„Qualle"** (default an) zeigt die Türme als Quallen-Icon; ausgeschaltet die
+  normalen cburnett-Türme.
 - **„Engine"** schaltet eine lokale **Stockfish**-Bewertung der aktuellen Stellung ein:
   Eval-Balken links am Brett (Weiß füllt von unten), Bewertung + Tiefe + beste Linie
   rechts, bester Zug als türkisfarbener Pfeil. Bewertet automatisch bei jeder Navigation

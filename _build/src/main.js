@@ -83,6 +83,7 @@ const fileInput = el('fileInput');
 const positionInfoEl = el('positionInfo');
 const cardsChaptersEl = el('cardsChapters');
 const engineToggle = el('chkEngine');
+const qualleToggle = el('chkQualle');
 const engineBarEl = el('engineBar');
 const evalBarEl = el('evalBar');
 const evalFillEl = el('evalFill');
@@ -742,6 +743,11 @@ function init() {
   authorToggle.addEventListener('change', () => { showAuthor = authorToggle.checked; authorToggle.blur(); ground.setAutoShapes(buildAutoShapes()); });
 
   if (engineToggle) engineToggle.addEventListener('change', () => { engineToggle.blur(); setEngineOn(engineToggle.checked); });
+
+  if (qualleToggle) {
+    document.body.classList.toggle('qualle', qualleToggle.checked); // sync with default
+    qualleToggle.addEventListener('change', () => { qualleToggle.blur(); document.body.classList.toggle('qualle', qualleToggle.checked); });
+  }
 
   document.addEventListener('keydown', (e) => {
     if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return;
