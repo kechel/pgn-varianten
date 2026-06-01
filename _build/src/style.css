@@ -61,6 +61,11 @@ select {
 select:disabled { opacity: .55; }
 .fileName { color: var(--fg-dim); font-size: 13px; }
 .spacer { flex: 1; }
+.src-link {
+  margin-left: 6px; padding: 7px 10px; border-radius: 6px;
+  color: var(--fg-dim); font-size: 13px; text-decoration: none; white-space: nowrap;
+}
+.src-link:hover { color: var(--fg); background: var(--bg3); }
 .chk { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--fg-dim); cursor: pointer; }
 
 /* ---------- main layout ---------- */
@@ -244,3 +249,9 @@ body.qualle .cg-wrap piece.rook.black { background-image: url(./qualle-black.png
 .empty-hint kbd {
   background: var(--bg3); border-radius: 4px; padding: 1px 6px; border: 1px solid #00000060;
 }
+.license-note {
+  margin-top: 22px; padding-top: 14px; border-top: 1px solid #ffffff14;
+  font-size: 13px; color: var(--fg-dim);
+}
+.license-note a { color: var(--accent); text-decoration: none; }
+.license-note a:hover { text-decoration: underline; }

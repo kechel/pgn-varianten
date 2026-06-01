@@ -742,7 +742,10 @@ function init() {
   // 1–9) keeps working — otherwise the focused checkbox/select swallows keys
   authorToggle.addEventListener('change', () => { showAuthor = authorToggle.checked; authorToggle.blur(); ground.setAutoShapes(buildAutoShapes()); });
 
-  if (engineToggle) engineToggle.addEventListener('change', () => { engineToggle.blur(); setEngineOn(engineToggle.checked); });
+  if (engineToggle) {
+    engineToggle.addEventListener('change', () => { engineToggle.blur(); setEngineOn(engineToggle.checked); });
+    if (engineToggle.checked) setEngineOn(true); // default on → load + start evaluating
+  }
 
   if (qualleToggle) {
     document.body.classList.toggle('qualle', qualleToggle.checked); // sync with default
