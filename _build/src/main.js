@@ -479,7 +479,7 @@ function pumpEngine() {
 async function setEngineOn(on) {
   engineOn = on;
   if (on) {
-    if (evalBarEl) evalBarEl.style.display = '';
+    if (evalBarEl) evalBarEl.classList.add('on'); // visibility only — never shifts the board
     if (engineBarEl) { engineBarEl.style.display = ''; engineBarEl.innerHTML = '<span class="eval-meta">Engine wird geladen…</span>'; }
     try {
       await ensureEngine();
@@ -487,7 +487,7 @@ async function setEngineOn(on) {
       console.warn(e);
       if (engineBarEl) engineBarEl.innerHTML = '<span class="eval-neg">Engine konnte nicht geladen werden.</span>';
       engineOn = false; engineToggle.checked = false;
-      if (evalBarEl) evalBarEl.style.display = 'none';
+      if (evalBarEl) evalBarEl.classList.remove('on');
       return;
     }
     if (!engineOn) return; // toggled back off while loading
@@ -495,7 +495,7 @@ async function setEngineOn(on) {
   } else {
     if (engine) engine.send('stop'); // searchingFen is cleared by the bestmove that follows
     engineBest = null; pendingFen = null;
-    if (evalBarEl) evalBarEl.style.display = 'none';
+    if (evalBarEl) evalBarEl.classList.remove('on');
     if (engineBarEl) engineBarEl.style.display = 'none';
     ground.setAutoShapes(buildAutoShapes());
   }
